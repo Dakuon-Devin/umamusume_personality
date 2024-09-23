@@ -2,6 +2,7 @@
 
 性格診断→似てるウマ娘レコメンドをRAGでやってみようって感じのPJ
 
+```plaintext
 umamusume_personality/
 │
 ├── backend/                      # バックエンド (FastAPI)
@@ -33,3 +34,4 @@ umamusume_personality/
 │
 ├── docker-compose.yml            # Docker Composeファイル (フロント/バックエンドの統合)
 └── README.md                     # プロジェクト概要説明
+```

@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from app.models import PersonalityQuizRequest, PersonalityQuizResponse
+from app.models import UserResponse, PersonalityQuizRequest, PersonalityQuizResponse
 
 from app.rag import get_umamusume_result
 from app.auth import (

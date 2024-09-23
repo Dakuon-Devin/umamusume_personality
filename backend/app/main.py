@@ -1,7 +1,10 @@
 from datetime import timedelta
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from app.models import UserResponse, PersonalityQuizRequest, PersonalityQuizResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from app.models import PersonalityQuizRequest, PersonalityQuizResponse
+
 from app.rag import get_umamusume_result
 from app.auth import (
         authenticate_user,
@@ -14,6 +17,16 @@ from app.auth import (
 
 # FastAPIアプリケーションの初期化
 app = FastAPI()
+
+
+# CORSミドルウェアの追加
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # すべてのオリジンからのリクエストを許可 (必要に応じて制限可能)
+    allow_credentials=True,
+    allow_methods=["*"],  # すべてのHTTPメソッドを許可
+    allow_headers=["*"],  # すべてのヘッダーを許可
+)
 
 
 @app.get("/")

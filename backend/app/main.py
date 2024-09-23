@@ -10,7 +10,7 @@ from app.auth import (
         create_access_token,
         User
     )
- 
+
 
 # FastAPIアプリケーションの初期化
 app = FastAPI()

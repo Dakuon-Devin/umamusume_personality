@@ -13,5 +13,10 @@ umamusume_profiles = [
         "name": "メジロマックイーン",
         "profile": "メジロマックイーンは冷静で落ち着いた性格。常に計画的に物事を進め、冷静な判断を下します。",
         "url": "https://umamusume.jp/character/mejiromcqueen"
-    }
+    },
+    {
+        "name": "スペシャルウィーク",
+        "profile": "スペシャルウィークは明るく元気な性格のウマ娘。人懐っこく、周りの人たちを元気づける存在です。",
+        "url": "https://umamusume.jp/character/specialweek"
+    },
 ]

@@ -1,6 +1,94 @@
-# umamusume_personality
+# ウマ娘性格診断システム (RAG ベース)
 
-性格診断→似てるウマ娘レコメンドをRAGでやってみようって感じのPJ
+ChatGPT との協働 PJ です。
+
+このプロジェクトは、ウマ娘の性格診断結果に基づいて、最も似たウマ娘キャラクターをレコメンドする Web アプリケーションです。FAISS インデックスを使用してウマ娘のデータを効率的に検索し、性格診断クイズの結果に基づいてウマ娘キャラクターを返します。
+
+## 目次
+
+- [ウマ娘性格診断システム (RAG ベース)](#ウマ娘性格診断システム-rag-ベース)
+  - [目次](#目次)
+  - [機能概要](#機能概要)
+  - [インストールとセットアップ](#インストールとセットアップ)
+    - [必要条件](#必要条件)
+    - [クローンとセットアップ](#クローンとセットアップ)
+  - [使い方](#使い方)
+  - [プロジェクト構成](#プロジェクト構成)
+  - [技術スタック](#技術スタック)
+
+---
+
+## 機能概要
+
+- ユーザーは性格診断クイズに回答し、その結果に基づいて最も似たウマ娘キャラクターがレコメンドされます。
+- FastAPI をバックエンド、React (TypeScript) をフロントエンドとして使用。
+- FAISS インデックスを使用し、保存済みのウマ娘キャラクターデータを効率的に検索。
+- OpenAI 埋め込みを使用した類似度検索。
+
+---
+
+## インストールとセットアップ
+
+### 必要条件
+
+- Python 3.10 以上
+- Node.js 14 以上
+- Docker (オプション)
+- Poetry (Python パッケージ管理)
+
+### クローンとセットアップ
+
+1. **リポジトリをクローン**
+
+```bash
+git clone https://github.com/username/umamusume_personality.git
+cd umamusume_personality
+```
+
+2. バックエンドの環境構築
+
+```bash
+cd backend
+poetry install
+touch .env
+```
+
+環境変数を設定
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+```
+
+3. フロントエンドの環境構築
+
+```bash
+cd ../frontend
+npm install
+```
+
+4.サーバの起動
+
+- バックエンド
+
+```bash
+cd ../backend
+poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+- フロントエンド
+
+```bash
+cd ../frontend
+npm start
+```
+
+## 使い方
+
+ログイン画面にアクセスし、適切なクレデンシャルを使用してログインします。
+ログイン後、性格診断クイズのページにリダイレクトされます。
+質問に答えて「Submit」ボタンを押すと、クイズの結果に基づいて最も似たウマ娘キャラクターがレコメンドされます。
+
+## プロジェクト構成
 
 ```plaintext
 umamusume_personality/
@@ -35,3 +123,9 @@ umamusume_personality/
 ├── docker-compose.yml            # Docker Composeファイル (フロント/バックエンドの統合)
 └── README.md                     # プロジェクト概要説明
 ```
+
+## 技術スタック
+
+- バックエンド: FastAPI, Python, FAISS, OpenAI API
+- フロントエンド: React, TypeScript
+- データベース: FAISSインデックスを用いた類似度検索

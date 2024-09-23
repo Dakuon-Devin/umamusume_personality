@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain_core.documents import Document
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 from app.umamusume_data import umamusume_profiles
 
@@ -56,7 +56,6 @@ def get_umamusume_result(input_text: str):
         )
 
     try:
-        # クエリ（診断文）に最も一致するドキュメントを検索
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",  # 生成部分で関連情報を補完
@@ -72,6 +71,13 @@ def get_umamusume_result(input_text: str):
         )
 
     try:
+        # 結果が存在し、ソースドキュメントが空でないことを確認
+        if not result or not result['source_documents']:
+            raise HTTPException(
+                status_code=500,
+                detail="No source documents found in the result"
+            )
+
         # 一番一致したウマ娘のプロフィールを返す
         best_match = result['source_documents'][0].metadata
         return {

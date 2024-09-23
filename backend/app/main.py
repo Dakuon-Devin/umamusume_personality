@@ -1,8 +1,24 @@
+from datetime import timedelta
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from app.models import PersonalityQuizRequest, PersonalityQuizResponse
 from app.rag import get_umamusume_result
-from app.auth import authenticate_user, get_current_user, User, fake_users_db
+from app.auth import (
+        authenticate_user,
+        fake_users_db,
+        get_current_user,
+        create_access_token,
+        User
+    )
+
+
+# パスワードを除外したレスポンス用のモデル
+class UserResponse(BaseModel):
+    username: str
+    full_name: str | None = None
+    disabled: bool | None = None
+
 
 # FastAPIアプリケーションの初期化
 app = FastAPI()
@@ -13,7 +29,6 @@ def read_root():
     return {"message": "Umamusume Personality Quiz is working!"}
 
 
-# トークン発行のためのエンドポイント
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(
@@ -21,7 +36,24 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     )
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"access_token": user.username, "token_type": "bearer"}
+
+    # JWTトークンを生成
+    access_token_expires = timedelta(minutes=30)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+# 認証されたユーザーの情報を返すエンドポイント
+@app.get("/users/me", response_model=UserResponse)  # レスポンスモデルを指定
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    # パスワードなどの機密情報は含まないUserResponseを返す
+    return UserResponse(
+        username=current_user.username,
+        full_name=current_user.full_name,
+        disabled=current_user.disabled
+    )
 
 
 # 性格診断エンドポイント

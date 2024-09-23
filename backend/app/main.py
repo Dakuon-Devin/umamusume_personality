@@ -1,8 +1,7 @@
 from datetime import timedelta
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from app.models import PersonalityQuizRequest, PersonalityQuizResponse
+from app.models import UserResponse, PersonalityQuizRequest, PersonalityQuizResponse
 from app.rag import get_umamusume_result
 from app.auth import (
         authenticate_user,
@@ -11,14 +10,7 @@ from app.auth import (
         create_access_token,
         User
     )
-
-
-# パスワードを除外したレスポンス用のモデル
-class UserResponse(BaseModel):
-    username: str
-    full_name: str | None = None
-    disabled: bool | None = None
-
+ 
 
 # FastAPIアプリケーションの初期化
 app = FastAPI()

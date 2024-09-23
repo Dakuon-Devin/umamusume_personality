@@ -1,0 +1,2 @@
+# umamusume_personality
+性格診断→似てるウマ娘レコメンドをRAGでやってみようって感じのPJ

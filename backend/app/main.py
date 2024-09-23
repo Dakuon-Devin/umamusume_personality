@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.models import PersonalityQuizRequest, PersonalityQuizResponse
+
 from app.rag import get_umamusume_result
 from app.auth import (
         authenticate_user,
@@ -12,13 +13,6 @@ from app.auth import (
         create_access_token,
         User
     )
-
-
-# パスワードを除外したレスポンス用のモデル
-class UserResponse(BaseModel):
-    username: str
-    full_name: str | None = None
-    disabled: bool | None = None
 
 
 # FastAPIアプリケーションの初期化

@@ -1,21 +1,19 @@
-export interface LoginData {
-  email: string;
-  password: string;
-}
-
-export const login = async (loginData: LoginData): Promise<string> => {
-  const response = await fetch('/login', {
+export const login = async (username: string, password: string): Promise<string> => {
+  const response = await fetch(`${process.env.REACT_APP_API_URL}/token`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: JSON.stringify(loginData),
+    body: new URLSearchParams({
+      username: username,
+      password: password,
+    }),
   });
 
   if (!response.ok) {
-    throw new Error('ログイン失敗');
+    throw new Error('Login failed');
   }
 
   const data = await response.json();
-  return data.access_token;  // JWTトークンを返す
+  return data.access_token; // JWTトークンを返す
 };

@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "spaceship-titanic"
+version = "0.1.0"
+description = "Spaceship Titanic competition solution"
+authors = ["Devin <devin@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pandas = "^2.1.4"
+numpy = "^1.26.3"
+kaggle = "^1.6.5"
+matplotlib = "^3.8.2"
+seaborn = "^0.13.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+black = "^23.12.1"
+isort = "^5.13.2"
+ruff = "^0.1.9"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"

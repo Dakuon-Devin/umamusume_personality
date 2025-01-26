@@ -1,0 +1,3 @@
+"""
+Spaceship Titanic competition package.
+"""

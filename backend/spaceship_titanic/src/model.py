@@ -1,10 +1,12 @@
 """
 Model definition for Spaceship Titanic competition.
 """
-from typing import Dict, Any
+from typing import Dict, Any, List
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
 
 class SpaceshipModel:
     """
@@ -21,9 +23,15 @@ class SpaceshipModel:
         self.model_params = model_params or {
             'n_estimators': 100,
             'max_depth': None,
-            'random_state': 42
+            'min_samples_split': 2,
+            'min_samples_leaf': 1,
+            'max_features': 'sqrt',
+            'bootstrap': True,
+            'random_state': 42,
+            'n_jobs': -1  # Use all available cores
         }
         self.model = RandomForestClassifier(**self.model_params)
+        self.feature_names: List[str] = []
     
     def fit(self, X, y):
         """

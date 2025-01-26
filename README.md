@@ -55,8 +55,11 @@ touch .env
 
 環境変数を設定
 
-```env
-OPENAI_API_KEY=your_openai_api_key
+環境変数の設定については、`.env.example`を参照してください。実際の環境変数は`.env`ファイルに設定してください。
+
+```bash
+cp .env.example .env
+# .envファイルを編集して、実際の値を設定してください
 ```
 
 3. フロントエンドの環境構築

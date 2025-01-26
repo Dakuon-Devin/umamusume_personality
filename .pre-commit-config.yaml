@@ -1,0 +1,33 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: detect-private-key
+    -   id: detect-aws-credentials
+    -   id: check-added-large-files
+    -   id: check-yaml
+    -   id: check-json
+    -   id: check-toml
+
+-   repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+    -   id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: poetry.lock|package-lock.json|yarn.lock|pnpm-lock.yaml
+
+-   repo: local
+    hooks:
+    -   id: check-env-files
+        name: Check for committed .env files
+        entry: bash -c 'for file in "$@"; do if [[ "$file" == *.env ]] || [[ "$file" == *.env.* ]]; then echo "Found .env file: $file"; exit 1; fi; done'
+        language: system
+        files: .*\.env.*
+        pass_filenames: true
+
+    -   id: check-api-keys
+        name: Check for API keys and tokens
+        entry: bash -c 'for file in "$@"; do if grep -i "api[_-]key\|token\|secret\|password" "$file" | grep -v "process.env\|os.getenv\|your_" > /dev/null; then echo "Potential secret found in $file"; exit 1; fi; done'
+        language: system
+        types: [text]
+        exclude: ^\.pre-commit-config\.yaml$|^\.github/workflows/.*$|poetry\.lock$|package-lock\.json$|yarn\.lock$|pnpm-lock\.yaml$

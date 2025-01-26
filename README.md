@@ -66,7 +66,7 @@ cd ../frontend
 npm install
 ```
 
-4.サーバの起動
+4. サーバの起動
 
 - バックエンド
 

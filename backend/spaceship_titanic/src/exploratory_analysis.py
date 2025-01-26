@@ -123,21 +123,52 @@ def analyze_correlations(train_df, output_dir):
 
 def main():
     """メイン関数"""
-    # 出力ディレクトリの作成
-    output_dir = Path('../data/analysis')
-    output_dir.mkdir(exist_ok=True)
-    
-    # データの読み込み
-    train_df, test_df = load_data()
-    
-    # 各分析の実行
-    analyze_numerical_features(train_df, output_dir)
-    analyze_missing_values(train_df, test_df, output_dir)
-    analyze_categorical_features(train_df, output_dir)
-    analyze_correlations(train_df, output_dir)
-    
-    print('分析が完了しました。結果は以下のディレクトリに保存されています：')
-    print(output_dir.absolute())
+    try:
+        print("探索的データ分析を開始します...")
+        
+        # 出力ディレクトリの作成
+        output_dir = Path('../data/analysis')
+        output_dir.mkdir(exist_ok=True)
+        print(f"出力ディレクトリを作成しました: {output_dir.absolute()}")
+        
+        # データの読み込み
+        print("データを読み込んでいます...")
+        train_df, test_df = load_data()
+        print(f"データ読み込み完了 - 訓練データ: {train_df.shape}, テストデータ: {test_df.shape}")
+        
+        # メモリ使用量を最適化
+        print("大きなデータセットをサンプリングします...")
+        sample_size = min(5000, len(train_df))
+        train_sample = train_df.sample(n=sample_size, random_state=42) if len(train_df) > sample_size else train_df
+        
+        # 各分析の実行
+        print("\n数値特徴量の分布を分析中...")
+        analyze_numerical_features(train_sample, output_dir)
+        print("✓ 数値特徴量の分析が完了しました")
+        
+        print("\n欠損値を分析中...")
+        analyze_missing_values(train_df, test_df, output_dir)
+        print("✓ 欠損値の分析が完了しました")
+        
+        print("\nカテゴリカル変数を分析中...")
+        analyze_categorical_features(train_sample, output_dir)
+        print("✓ カテゴリカル変数の分析が完了しました")
+        
+        print("\n特徴量間の相関を分析中...")
+        analyze_correlations(train_sample, output_dir)
+        print("✓ 相関分析が完了しました")
+        
+        print("\n分析が完了しました。結果は以下のディレクトリに保存されています：")
+        print(output_dir.absolute())
+        
+        # 生成されたファイルの一覧を表示
+        print("\n生成されたファイル：")
+        for file in output_dir.glob('*'):
+            print(f"- {file.name}")
+            
+    except Exception as e:
+        print(f"\nエラーが発生しました: {str(e)}")
+        raise
 
 if __name__ == '__main__':
     main()

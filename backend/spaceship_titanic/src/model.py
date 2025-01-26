@@ -78,4 +78,6 @@ class SpaceshipModel:
         if not hasattr(self.model, 'feature_importances_'):
             raise ValueError("Model doesn't have feature importances available")
             
-        return dict(zip(self.feature_names_, self.model.feature_importances_))
+        if not self.feature_names:
+            raise ValueError("Feature names not set. Set feature_names before calling get_feature_importance")
+        return dict(zip(self.feature_names, self.model.feature_importances_))

@@ -59,74 +59,98 @@ def load_data(train_path: str, test_path: str) -> Tuple[pd.DataFrame, pd.DataFra
     test_df = pd.read_csv(test_path)
     return train_df, test_df
 
-def preprocess_features(df: pd.DataFrame, is_training: bool = True) -> pd.DataFrame:
-    """
-    Preprocess features including handling missing values, encoding categorical variables,
-    and scaling numerical features.
-    
-    Args:
-        df: Input DataFrame
-        is_training: Whether this is training data (affects how we handle certain operations)
-    
-    Returns:
-        Preprocessed DataFrame
-    """
-    # Create a copy to avoid modifying original data
-    df = df.copy()
-    
-    # Extract features from PassengerId
-    df['GroupNumber'], df['GroupPosition'] = zip(*df['PassengerId'].map(extract_passenger_group))
-    
-    # Extract features from Cabin
-    df[['Deck', 'CabinNumber', 'Side']] = pd.DataFrame(
-        df['Cabin'].map(extract_cabin_features).tolist(),
-        columns=['Deck', 'CabinNumber', 'Side']
-    )
-    
-    # Handle boolean features
-    df['CryoSleep'] = df['CryoSleep'].astype('float')
-    df['VIP'] = df['VIP'].astype('float')
-    
-    # Split RoomService, FoodCourt, ShoppingMall, Spa, VRDeck into bins
-    expense_columns = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
-    for col in expense_columns:
-        df[f'{col}_binned'] = pd.qcut(df[col].fillna(-1), q=10, labels=False, duplicates='drop')
-    
-    # Calculate and standardize total expenses
-    df['TotalExpenses'] = df[expense_columns].sum(axis=1)
-    if is_training:
-        scaler = StandardScaler()
-        df['TotalExpenses'] = scaler.fit_transform(df[['TotalExpenses']])
-    
-    # Create age groups
-    df['AgeGroup'] = pd.qcut(df['Age'].fillna(-1), q=10, labels=False, duplicates='drop')
-    
-    # Handle boolean features with missing values
-    bool_columns = ['CryoSleep', 'VIP']
-    for col in bool_columns:
-        df[col] = df[col].fillna(df[col].mode()[0]).astype('float')
-    
-    # Handle categorical variables
-    categorical_columns = ['HomePlanet', 'Destination', 'Deck', 'Side']
-    for col in categorical_columns:
-        df[col] = df[col].astype('category')
+class Preprocessor:
+    """データの前処理を行うクラス"""
+    def __init__(self):
+        self.label_encoders = {}
+        self.imputers = {}
+        self.scalers = {}
+        self.total_expenses_scaler = None
+        
+    def preprocess_features(self, df: pd.DataFrame, is_training: bool = True) -> pd.DataFrame:
+        """
+        特徴量の前処理を行う。欠損値の処理、カテゴリ変数のエンコーディング、
+        数値特徴量のスケーリングを含む。
+        
+        Args:
+            df: 入力DataFrame
+            is_training: 訓練データかどうか（特定の操作の扱いに影響）
+        
+        Returns:
+            前処理済みDataFrame
+        """
+        # Create a copy to avoid modifying original data
+        df = df.copy()
+        
+        # Extract features from PassengerId
+        df['GroupNumber'], df['GroupPosition'] = zip(*df['PassengerId'].map(extract_passenger_group))
+        
+        # Extract features from Cabin
+        df[['Deck', 'CabinNumber', 'Side']] = pd.DataFrame(
+            df['Cabin'].map(extract_cabin_features).tolist(),
+            columns=['Deck', 'CabinNumber', 'Side']
+        )
+        
+        # Handle boolean features
+        df['CryoSleep'] = df['CryoSleep'].astype('float')
+        df['VIP'] = df['VIP'].astype('float')
+        
+        # Split RoomService, FoodCourt, ShoppingMall, Spa, VRDeck into bins
+        expense_columns = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
+        for col in expense_columns:
+            df[f'{col}_binned'] = pd.qcut(df[col].fillna(-1), q=10, labels=False, duplicates='drop')
+        
+        # Calculate and standardize total expenses
+        df['TotalExpenses'] = df[expense_columns].sum(axis=1)
         if is_training:
-            df[col] = LabelEncoder().fit_transform(df[col].astype(str))
-    
-    # Handle numerical features
-    numerical_columns = ['Age', 'GroupNumber', 'CabinNumber'] + expense_columns
-    for col in numerical_columns:
-        if is_training:
-            imputer = SimpleImputer(strategy='median')
-            df[col] = imputer.fit_transform(df[[col]])
-        scaler = StandardScaler()
-        df[col] = scaler.fit_transform(df[[col]])
-    
-    # Drop original columns that have been transformed
-    columns_to_drop = ['PassengerId', 'Cabin'] + expense_columns
-    df = df.drop(columns=columns_to_drop)
-    
-    return df
+            self.total_expenses_scaler = StandardScaler()
+            df['TotalExpenses'] = self.total_expenses_scaler.fit_transform(df[['TotalExpenses']])
+        else:
+            if self.total_expenses_scaler:
+                df['TotalExpenses'] = self.total_expenses_scaler.transform(df[['TotalExpenses']])
+        
+        # Create age groups
+        df['AgeGroup'] = pd.qcut(df['Age'].fillna(-1), q=10, labels=False, duplicates='drop')
+        
+        # Handle boolean features with missing values
+        bool_columns = ['CryoSleep', 'VIP']
+        for col in bool_columns:
+            df[col] = df[col].fillna(df[col].mode()[0]).astype('float')
+        
+        # Handle categorical variables
+        categorical_columns = ['HomePlanet', 'Destination', 'Deck', 'Side']
+        for col in categorical_columns:
+            df[col] = df[col].astype('category')
+            if is_training:
+                self.label_encoders[col] = LabelEncoder()
+                df[col] = self.label_encoders[col].fit_transform(df[col].astype(str))
+            else:
+                if col in self.label_encoders:
+                    # Handle unseen categories in test data
+                    df[col] = df[col].astype(str)
+                    unseen_categories = ~df[col].isin(self.label_encoders[col].classes_)
+                    if unseen_categories.any():
+                        df.loc[unseen_categories, col] = self.label_encoders[col].classes_[0]
+                    df[col] = self.label_encoders[col].transform(df[col])
+        
+        # Handle numerical features
+        numerical_columns = ['Age', 'GroupNumber', 'CabinNumber'] + expense_columns
+        for col in numerical_columns:
+            if is_training:
+                self.imputers[col] = SimpleImputer(strategy='median')
+                self.scalers[col] = StandardScaler()
+                df[col] = self.imputers[col].fit_transform(df[[col]])
+                df[col] = self.scalers[col].fit_transform(df[[col]])
+            else:
+                if col in self.imputers and col in self.scalers:
+                    df[col] = self.imputers[col].transform(df[[col]])
+                    df[col] = self.scalers[col].transform(df[[col]])
+        
+        # Drop original columns that have been transformed
+        columns_to_drop = ['PassengerId', 'Cabin'] + expense_columns
+        df = df.drop(columns=columns_to_drop)
+        
+        return df
 
 def prepare_training_data(df: pd.DataFrame, 
                          target_col: str = 'Transported',
@@ -149,14 +173,15 @@ def prepare_training_data(df: pd.DataFrame,
     
     return train_test_split(X, y, test_size=test_size, random_state=random_state)
 
-def prepare_test_data(df: pd.DataFrame) -> pd.DataFrame:
+def prepare_test_data(df: pd.DataFrame, preprocessor: Preprocessor) -> pd.DataFrame:
     """
-    Prepare test data for predictions.
-    
+    テストデータの前処理を行う。
+
     Args:
-        df: Input DataFrame
-    
+        df: 入力DataFrame
+        preprocessor: 訓練データで使用した前処理器
+
     Returns:
-        Preprocessed test DataFrame
+        前処理済みのテストDataFrame
     """
-    return df
+    return preprocessor.preprocess_features(df, is_training=False)

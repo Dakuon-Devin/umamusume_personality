@@ -15,21 +15,46 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import json
+import matplotlib
+
+# バックエンドを設定（メモリ使用量を抑制）
+matplotlib.use('Agg')
 
 # プロットのスタイル設定
 plt.style.use('seaborn-v0_8')  # 新しいバージョンのseabornスタイル
 sns.set_theme(style="whitegrid")  # seabornのテーマを設定
 sns.set_palette('husl')
 
-# 日本語フォントの設定（利用可能なフォントがない場合はデフォルトを使用）
-try:
-    plt.rcParams['font.family'] = 'IPAexGothic'
-except:
-    print('Warning: IPAexGothic font not found. Using default font.')
+# フォントの設定
+import matplotlib
+import matplotlib.font_manager as fm
+
+# IPAexGothicフォントのパスを設定
+font_path = '/usr/share/fonts/opentype/ipaexfont-gothic/ipaexg.ttf'
+font_prop = fm.FontProperties(fname=font_path)
+
+# フォントの登録
+fm.fontManager.addfont(font_path)
+
+# プロットの設定
+plt.rcParams['font.family'] = ['IPAexGothic']
+plt.rcParams['font.sans-serif'] = ['IPAexGothic']
+plt.rcParams['font.size'] = 12  # フォントサイズを大きくして読みやすく
+plt.rcParams['axes.unicode_minus'] = False  # マイナス記号を正しく表示
+plt.rcParams['figure.figsize'] = [12, 8]  # 図のサイズを大きくして見やすく
+plt.rcParams['figure.dpi'] = 300  # 解像度を高く設定
+
+# タイトルなどのテキストにフォントを設定する関数
+def set_plot_font(ax):
+    """Set font for plot title and labels"""
+    if ax.get_title():
+        ax.set_title(ax.get_title(), fontproperties=font_prop)
+    ax.set_xlabel(ax.get_xlabel(), fontproperties=font_prop)
+    ax.set_ylabel(ax.get_ylabel(), fontproperties=font_prop)
 
 def load_data():
     """データの読み込み"""
-    data_dir = Path('../data/raw')
+    data_dir = Path('../data')
     train_df = pd.read_csv(data_dir / 'train.csv')
     test_df = pd.read_csv(data_dir / 'test.csv')
     return train_df, test_df
@@ -42,11 +67,14 @@ def analyze_numerical_features(train_df, output_dir):
     axes = axes.ravel()
     
     for idx, feature in enumerate(numerical_features):
-        sns.histplot(data=train_df, x=feature, ax=axes[idx])
-        axes[idx].set_title(f'{feature}の分布')
-    
+        sns.histplot(data=train_df, x=feature, ax=axes[idx], hue='Transported')
+        axes[idx].set_title(f'{feature}の分布', fontproperties=font_prop)
+        axes[idx].set_xlabel(feature, fontproperties=font_prop)
+        axes[idx].set_ylabel('頻度', fontproperties=font_prop)
+        
+    plt.suptitle('数値特徴量の分布（転送状態別）', fontsize=14, fontproperties=font_prop)
     plt.tight_layout()
-    plt.savefig(output_dir / 'numerical_distributions.png')
+    plt.savefig(output_dir / 'numerical_distributions.png', bbox_inches='tight', dpi=300)
     plt.close()
     
     # 基本統計量を保存
@@ -58,18 +86,21 @@ def analyze_missing_values(train_df, test_df, output_dir):
     missing_train = (train_df.isnull().sum() / len(train_df) * 100).sort_values(ascending=False)
     missing_test = (test_df.isnull().sum() / len(test_df) * 100).sort_values(ascending=False)
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 8))
     
-    sns.barplot(x=missing_train.values, y=missing_train.index, ax=ax1)
-    ax1.set_title('訓練データの欠損値割合')
-    ax1.set_xlabel('欠損値の割合 (%)')
+    sns.barplot(x=missing_train.values, y=missing_train.index, ax=ax1, palette='husl')
+    ax1.set_title('訓練データの欠損値割合', fontproperties=font_prop, fontsize=12)
+    ax1.set_xlabel('欠損値の割合 (%)', fontproperties=font_prop)
+    ax1.set_ylabel('特徴量', fontproperties=font_prop)
     
-    sns.barplot(x=missing_test.values, y=missing_test.index, ax=ax2)
-    ax2.set_title('テストデータの欠損値割合')
-    ax2.set_xlabel('欠損値の割合 (%)')
+    sns.barplot(x=missing_test.values, y=missing_test.index, ax=ax2, palette='husl')
+    ax2.set_title('テストデータの欠損値割合', fontproperties=font_prop, fontsize=12)
+    ax2.set_xlabel('欠損値の割合 (%)', fontproperties=font_prop)
+    ax2.set_ylabel('特徴量', fontproperties=font_prop)
     
+    plt.suptitle('データセットの欠損値分析', fontsize=14, fontproperties=font_prop)
     plt.tight_layout()
-    plt.savefig(output_dir / 'missing_values.png')
+    plt.savefig(output_dir / 'missing_values.png', bbox_inches='tight', dpi=300)
     plt.close()
     
     # 欠損値の詳細を保存
@@ -94,13 +125,18 @@ def analyze_categorical_features(train_df, output_dir):
         transport_rate = train_df.groupby(feature)['Transported'].mean().sort_values(ascending=False)
         categorical_stats[feature] = transport_rate.to_dict()
         
-        sns.barplot(x=transport_rate.index, y=transport_rate.values, ax=axes[idx])
-        axes[idx].set_title(f'{feature}別の転送率')
-        axes[idx].set_ylabel('転送率')
+        sns.barplot(x=transport_rate.index, y=transport_rate.values, ax=axes[idx], palette='husl')
+        axes[idx].set_title(f'{feature}別の転送率', fontproperties=font_prop, fontsize=12)
+        axes[idx].set_ylabel('転送率', fontproperties=font_prop)
+        axes[idx].set_xlabel(feature, fontproperties=font_prop)
         axes[idx].tick_params(axis='x', rotation=45)
+        
+        # パーセント表示に変換
+        axes[idx].set_yticklabels([f'{x:.1%}' for x in axes[idx].get_yticks()])
     
+    plt.suptitle('カテゴリ別の転送率分析', fontsize=14, fontproperties=font_prop)
     plt.tight_layout()
-    plt.savefig(output_dir / 'categorical_analysis.png')
+    plt.savefig(output_dir / 'categorical_analysis.png', bbox_inches='tight', dpi=300)
     plt.close()
     
     # カテゴリカル変数の統計を保存
@@ -112,10 +148,23 @@ def analyze_correlations(train_df, output_dir):
     numerical_features = ['Age', 'RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
     correlation_matrix = train_df[numerical_features].corr()
     
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0)
-    plt.title('数値特徴量間の相関')
-    plt.savefig(output_dir / 'correlation_matrix.png')
+    plt.figure(figsize=(12, 10))
+    mask = np.triu(np.ones_like(correlation_matrix, dtype=bool))
+    sns.heatmap(correlation_matrix, 
+                mask=mask,
+                annot=True, 
+                cmap='coolwarm', 
+                center=0,
+                fmt='.2f',
+                square=True,
+                linewidths=0.5)
+    
+    plt.title('数値特徴量間の相関係数', fontproperties=font_prop, fontsize=14, pad=20)
+    plt.xticks(fontproperties=font_prop)
+    plt.yticks(fontproperties=font_prop, rotation=0)
+    
+    plt.tight_layout()
+    plt.savefig(output_dir / 'correlation_matrix.png', bbox_inches='tight', dpi=300)
     plt.close()
     
     # 相関行列を保存

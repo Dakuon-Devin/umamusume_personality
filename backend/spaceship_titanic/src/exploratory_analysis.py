@@ -16,12 +16,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import json
 
-# 日本語フォントの設定
-plt.rcParams['font.family'] = 'IPAexGothic'
-
 # プロットのスタイル設定
-plt.style.use('seaborn')
+plt.style.use('seaborn-v0_8')  # 新しいバージョンのseabornスタイル
+sns.set_theme(style="whitegrid")  # seabornのテーマを設定
 sns.set_palette('husl')
+
+# 日本語フォントの設定（利用可能なフォントがない場合はデフォルトを使用）
+try:
+    plt.rcParams['font.family'] = 'IPAexGothic'
+except:
+    print('Warning: IPAexGothic font not found. Using default font.')
 
 def load_data():
     """データの読み込み"""

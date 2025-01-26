@@ -92,11 +92,19 @@ def preprocess_features(df: pd.DataFrame, is_training: bool = True) -> pd.DataFr
     for col in expense_columns:
         df[f'{col}_binned'] = pd.qcut(df[col].fillna(-1), q=10, labels=False, duplicates='drop')
     
-    # Calculate total expenses
+    # Calculate and standardize total expenses
     df['TotalExpenses'] = df[expense_columns].sum(axis=1)
+    if is_training:
+        scaler = StandardScaler()
+        df['TotalExpenses'] = scaler.fit_transform(df[['TotalExpenses']])
     
     # Create age groups
     df['AgeGroup'] = pd.qcut(df['Age'].fillna(-1), q=10, labels=False, duplicates='drop')
+    
+    # Handle boolean features with missing values
+    bool_columns = ['CryoSleep', 'VIP']
+    for col in bool_columns:
+        df[col] = df[col].fillna(df[col].mode()[0]).astype('float')
     
     # Handle categorical variables
     categorical_columns = ['HomePlanet', 'Destination', 'Deck', 'Side']

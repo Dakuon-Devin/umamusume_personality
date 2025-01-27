@@ -234,3 +234,25 @@ package-lock.json
 .DS_Store
 debug_env
 umamusume_data.py
+
+# Kaggle API and data files
+kaggle.json
+*.csv
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!poetry.json
+
+# ML model files and data
+*.h5
+*.pkl
+*.model
+data/
+datasets/
+models/
+
+# Additional environment and config files
+.kaggle/
+*.env.*
+config.*.json

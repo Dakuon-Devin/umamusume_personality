@@ -234,3 +234,13 @@ package-lock.json
 .DS_Store
 debug_env
 umamusume_data.py
+# Kaggle data files
+kaggle_data/
+**/kaggle_data/
+**/train.csv
+**/test.csv
+**/sample_submission.csv
+**/data/*.csv
+**/data/*.json
+**/data/*.zip
+**/datasets/
